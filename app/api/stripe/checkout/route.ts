@@ -5,6 +5,7 @@ import { priceIdForPlan, type PlanId } from "@/lib/plans";
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const planId = (body.planId || "pro") as PlanId;
+  const email = body.email as string | undefined;
   if (planId === "free") {
     return NextResponse.json({ url: `${appUrl()}/studio` });
   }
@@ -12,23 +13,14 @@ export async function POST(req: NextRequest) {
   const stripe = getStripe();
   if (!stripe) {
     return NextResponse.json(
-      {
-        error:
-          "Stripe is not configured. Add STRIPE_SECRET_KEY (sk_test_...) and STRIPE_PRICE_* to Vercel env / .env.local",
-        demo: true,
-      },
+      { error: "Stripe is not configured. Set STRIPE_SECRET_KEY (sk_test_…).", demo: true },
       { status: 503 }
     );
   }
 
   const priceId = priceIdForPlan(planId);
   if (!priceId) {
-    return NextResponse.json(
-      {
-        error: `Missing Stripe Price ID for plan "${planId}". Set env ${planId === "starter" ? "STRIPE_PRICE_STARTER" : planId === "pro" ? "STRIPE_PRICE_PRO" : "STRIPE_PRICE_TEAM"}`,
-      },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: `Missing price for ${planId}` }, { status: 400 });
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -38,7 +30,9 @@ export async function POST(req: NextRequest) {
     success_url: `${appUrl()}/studio?checkout=success&plan=${planId}`,
     cancel_url: `${appUrl()}/pricing?checkout=cancel`,
     allow_promotion_codes: true,
+    customer_email: email,
     metadata: { planId },
+    subscription_data: { metadata: { planId, email: email || "" } },
   });
 
   return NextResponse.json({ url: session.url, sessionId: session.id });
