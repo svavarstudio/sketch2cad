@@ -31,7 +31,7 @@ export function planToCadQuery(plan: FloorPlan, height = 2700): string {
   const lines = [
     "# Sketch2CAD architectural shell (generated)",
     "import cadquery as cq",
-    f"default_height = {height}",
+    `default_height = ${height}`,
     "parts = []",
     "",
   ];

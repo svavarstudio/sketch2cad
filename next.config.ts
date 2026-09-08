@@ -6,10 +6,10 @@ import type { NextConfig } from "next";
  * - partialPrefetching: reusable shell per route (SPA-like)
  * See: https://nextjs.org/blog/next-16-3-instant-navigations
  */
-const nextConfig: NextConfig = {
+const nextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   reactStrictMode: true,
-};
+} as NextConfig;
 
 export default nextConfig;
